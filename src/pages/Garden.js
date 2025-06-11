@@ -1,22 +1,35 @@
-import React from 'react';
-import PlantCard from '../components/PlantCard';
+import React, { useEffect, useState } from "react";
+import PlantCard from "../components/PlantCard";
 
-function Garden() {
-  // Example plants — later will come from Flask backend
-  const examplePlants = [
-    { name: 'Tomato', datePlanted: '2025-05-01', growthStage: 'Seedling' },
-    { name: 'Basil', datePlanted: '2025-05-15', growthStage: 'Vegetative' },
-    { name: 'Carrot', datePlanted: '2025-06-01', growthStage: 'Germination' },
-  ];
+const Garden = () => {
+  const [plants, setPlants] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("http://localhost:5000/api/plants")
+      .then((res) => res.json())
+      .then((data) => {
+        setPlants(data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("Error fetching plants:", err);
+        setLoading(false);
+      });
+  }, []);
+
+  if (loading) return <div className="p-4">Loading your garden...</div>;
 
   return (
-    <div>
-      <h2>Garden Tracker</h2>
-      {examplePlants.map((plant, index) => (
-        <PlantCard key={index} plant={plant} />
-      ))}
+    <div className="p-4">
+      <h1 className="text-2xl font-bold mb-4">🌱 My Garden</h1>
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {plants.map((plant) => (
+          <PlantCard key={plant.id} plant={plant} />
+        ))}
+      </div>
     </div>
   );
-}
+};
 
 export default Garden;

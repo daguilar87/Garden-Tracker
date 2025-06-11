@@ -1,20 +1,13 @@
-import React from 'react';
+import React from "react";
 
-function PlantCard({ plant }) {
+const PlantCard = ({ plant }) => {
   return (
-    <div style={{
-      border: '1px solid #4CAF50',
-      borderRadius: '8px',
-      padding: '1rem',
-      margin: '1rem 0',
-      backgroundColor: '#f9fff9',
-    }}>
-      <h3>{plant.name}</h3>
-      <p>Planted on: {plant.datePlanted}</p>
-      <p>Growth Stage: {plant.growthStage}</p>
-      {/* Add image, notes, more fields later */}
+    <div className="border rounded-lg shadow p-4 bg-white">
+      <h2 className="text-xl font-semibold">{plant.name}</h2>
+      <p><strong>Date Planted:</strong> {plant.datePlanted}</p>
+      <p><strong>Growth Stage:</strong> {plant.growthStage}</p>
     </div>
   );
-}
+};
 
 export default PlantCard;
