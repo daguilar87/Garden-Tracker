@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 function Login() {
@@ -6,6 +6,14 @@ function Login() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
+
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      navigate("/dashboard");
+    }
+  }, [navigate]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -24,8 +32,10 @@ function Login() {
         return;
       }
 
+  
       localStorage.setItem("token", data.token);
-      navigate("/garden"); // redirect to garden or dashboard
+      localStorage.setItem("username", data.username);
+      navigate("/dashboard");
     } catch (err) {
       setError("Something went wrong");
       console.error(err);
