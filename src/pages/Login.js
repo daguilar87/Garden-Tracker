@@ -11,7 +11,7 @@ function Login() {
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
-      navigate("/dashboard");
+      navigate("/");
     }
   }, [navigate]);
 
@@ -35,7 +35,7 @@ function Login() {
   
       localStorage.setItem("token", data.token);
       localStorage.setItem("username", data.username);
-      navigate("/dashboard");
+      navigate("/");
     } catch (err) {
       setError("Something went wrong");
       console.error(err);
