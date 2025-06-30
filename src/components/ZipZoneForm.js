@@ -4,25 +4,43 @@ export default function ZipZoneForm({ onZoneUpdated }) {
   const [zip, setZip] = useState("");
   const [error, setError] = useState("");
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const res = await fetch("/api/update-zip", {
+const handleSubmit = async (e) => {
+  e.preventDefault();
+
+  const token = localStorage.getItem("token");
+  console.log("JWT Token:", token);
+
+  const trimmedZip = zip.trim();
+  if (!/^\d{5}$/.test(trimmedZip)) {
+    setError("Please enter a valid 5-digit ZIP code");
+    return;
+  }
+
+  try {
+    const res = await fetch("http://127.0.0.1:5000/api/update-zip", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
+        Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ zip_code: zip }),
+      body: JSON.stringify({ zip_code: trimmedZip }),
     });
 
     const data = await res.json();
+
     if (!res.ok) {
       setError(data.error || "Failed to update ZIP");
     } else {
       localStorage.setItem("zone", data.zone);
       onZoneUpdated(data.zone);
+      setError("");
     }
-  };
+  } catch (err) {
+    console.error("Fetch error:", err);
+    setError("Request failed");
+  }
+};
+
 
   return (
     <form onSubmit={handleSubmit} className="space-y-2">
@@ -34,7 +52,10 @@ export default function ZipZoneForm({ onZoneUpdated }) {
         className="border p-2 w-full"
       />
       {error && <p className="text-red-600">{error}</p>}
-      <button className="bg-green-600 text-white py-2 px-4 rounded" type="submit">
+      <button
+        className="bg-green-600 text-white py-2 px-4 rounded"
+        type="submit"
+      >
         Save ZIP
       </button>
     </form>
