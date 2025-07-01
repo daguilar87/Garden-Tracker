@@ -7,7 +7,6 @@ function Login() {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
@@ -32,9 +31,20 @@ function Login() {
         return;
       }
 
-  
       localStorage.setItem("token", data.token);
       localStorage.setItem("username", data.username);
+
+      // Fetch user info including zone & zip after login
+      const userRes = await fetch("http://localhost:5000/api/me", {
+        headers: {
+          Authorization: `Bearer ${data.token}`,
+        },
+      });
+
+      const userData = await userRes.json();
+      localStorage.setItem("zone", userData.zone || "");
+      localStorage.setItem("zip", userData.zip_code || "");
+
       navigate("/");
     } catch (err) {
       setError("Something went wrong");

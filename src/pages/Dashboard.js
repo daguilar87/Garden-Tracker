@@ -1,19 +1,29 @@
-import React, { useState, useEffect } from 'react';
-import WeatherWidget from '../components/WeatherWidget';
-import ZipZoneForm from '../components/ZipZoneForm';
-import PlantTimeline from '../components/PlantTimeLine';
+import React, { useState, useEffect } from "react";
+import WeatherWidget from "../components/WeatherWidget";
+import ZipZoneForm from "../components/ZipZoneForm";
+import PlantTimeline from "../components/PlantTimeLine";
 
 export default function Dashboard() {
-  const [zone, setZone] = useState(localStorage.getItem('zone') || '');
-  const [plant, setPlant] = useState('Tomato');
+  const [zone, setZone] = useState("");
+  const [city, setCity] = useState("");
+  const [plant, setPlant] = useState("Tomato");
   const [info, setInfo] = useState(null);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const storedZone = localStorage.getItem("zone");
+    const storedCity = localStorage.getItem("city") || localStorage.getItem("zip");
+    if (storedZone) setZone(storedZone);
+    if (storedCity) setCity(storedCity);
+    setLoading(false);
+  }, []);
 
   useEffect(() => {
     if (zone && plant) {
       fetch(`http://127.0.0.1:5000/api/planting-info/${plant}?zone=${zone}`, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       })
         .then((res) => {
@@ -28,16 +38,25 @@ export default function Dashboard() {
             setInfo(null);
           } else {
             setInfo(data);
-            setError('');
+            setError("");
           }
         })
         .catch((err) => {
-          console.error('Error fetching timeline:', err);
-          setError('Could not load planting timeline.');
+          console.error("Error fetching timeline:", err);
+          setError("Could not load planting timeline.");
           setInfo(null);
         });
     }
   }, [zone, plant]);
+
+  const handleZoneUpdate = (newZone, newCity) => {
+    setZone(newZone);
+    if (newCity) setCity(newCity);
+    localStorage.setItem("zone", newZone);
+    if (newCity) localStorage.setItem("city", newCity);
+  };
+
+  if (loading) return <div>Loading...</div>;
 
   return (
     <div className="p-6 space-y-6">
@@ -51,16 +70,13 @@ export default function Dashboard() {
       {!zone ? (
         <div>
           <h3 className="text-lg font-semibold">Set Your ZIP Code</h3>
-          <ZipZoneForm
-            onZoneUpdated={(z) => {
-              setZone(z);
-              localStorage.setItem('zone', z);
-            }}
-          />
+          <ZipZoneForm onZoneUpdated={handleZoneUpdate} />
         </div>
       ) : (
         <div>
-          <h3 className="text-lg font-semibold mb-2">Planting Timeline for Zone {zone}</h3>
+          <h3 className="text-lg font-semibold mb-2">
+            Planting Timeline for {city || `Zone ${zone}`}
+          </h3>
 
           <label className="block mb-2">
             Choose a plant:
@@ -76,6 +92,11 @@ export default function Dashboard() {
 
           {error && <p className="text-red-600">{error}</p>}
           <PlantTimeline info={info} />
+
+          <div className="mt-6">
+            <h3 className="text-lg font-semibold">Change ZIP Code</h3>
+            <ZipZoneForm onZoneUpdated={handleZoneUpdate} />
+          </div>
         </div>
       )}
     </div>
