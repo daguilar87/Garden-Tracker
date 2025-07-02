@@ -1,104 +1,152 @@
 import React, { useState, useEffect } from "react";
 
 const AddPlantForm = ({ onPlantAdded }) => {
-  const [plants, setPlants] = useState([]);
+  const [plantOptions, setPlantOptions] = useState([]);
+  const [useCustom, setUseCustom] = useState(false);
   const [plantId, setPlantId] = useState("");
+  const [customName, setCustomName] = useState("");
   const [plantingDate, setPlantingDate] = useState("");
   const [notes, setNotes] = useState("");
-  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/plants")
+    fetch("http://127.0.0.1:5000/api/plants")
       .then((res) => res.json())
-      .then((data) => {
-        setPlants(data);
-        if (data.length > 0) {
-          setPlantId(data[0].id);
-        }
+      .then((data) => setPlantOptions(data))
+      .catch((err) => {
+        console.error("Error loading plant options:", err);
+        setError("Failed to load plant list.");
       });
   }, []);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    fetch("http://localhost:5000/api/user/plants", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
-      body: JSON.stringify({
-        plant_id: plantId,
-        planting_date: plantingDate,
-        notes: notes,
-      }),
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to add plant");
-        return res.json();
-      })
-      .then((data) => {
-        setMessage("🌱 Plant added to your garden!");
-        setNotes("");
-        setPlantingDate("");
-        onPlantAdded(); // refresh garden list
-      })
-      .catch((err) => {
-        setMessage("❌ Error adding plant.");
-        console.error(err);
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setError("You must be logged in.");
+      return;
+    }
+
+    if (!plantingDate || (!useCustom && !plantId) || (useCustom && !customName)) {
+      setError("All fields are required.");
+      return;
+    }
+
+    const payload = {
+      planting_date: plantingDate,
+      notes,
+      ...(useCustom
+        ? { plant_name: customName }
+        : { plant_id: plantId }),
+    };
+
+    try {
+      const res = await fetch("http://127.0.0.1:5000/api/user/plants", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
       });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || "Failed to add plant.");
+      } else {
+        setError("");
+        setPlantId("");
+        setCustomName("");
+        setPlantingDate("");
+        setNotes("");
+        onPlantAdded();
+      }
+    } catch (err) {
+      console.error("Error submitting plant:", err);
+      setError("Something went wrong.");
+    }
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="border rounded-lg p-4 bg-white shadow max-w-md mb-6"
-    >
-      <h3 className="text-lg font-semibold mb-2">Add a Plant to Your Garden</h3>
+    <form onSubmit={handleSubmit} className="space-y-4 bg-white p-4 rounded shadow">
+      <h3 className="text-lg font-semibold">Add a Plant</h3>
 
-      <label className="block mb-2">
-        Plant:
-        <select
-          value={plantId}
-          onChange={(e) => setPlantId(e.target.value)}
-          className="ml-2 p-1 border rounded"
-        >
-          {plants.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.name}
-            </option>
-          ))}
-        </select>
-      </label>
+      {!useCustom ? (
+        <div>
+          <label className="block mb-1">Select a plant:</label>
+          <select
+            value={plantId}
+            onChange={(e) => setPlantId(e.target.value)}
+            className="p-2 border rounded w-full"
+          >
+            <option value="">-- Choose from list --</option>
+            {plantOptions.map((opt) => (
+              <option key={opt.id} value={opt.id}>
+                {opt.name}
+              </option>
+            ))}
+          </select>
+          <button
+            type="button"
+            onClick={() => {
+              setUseCustom(true);
+              setPlantId("");
+            }}
+            className="text-sm text-blue-500 mt-2 underline"
+          >
+            Enter manually instead
+          </button>
+        </div>
+      ) : (
+        <div>
+          <label className="block mb-1">Plant name:</label>
+          <input
+            type="text"
+            value={customName}
+            onChange={(e) => setCustomName(e.target.value)}
+            className="p-2 border rounded w-full"
+            placeholder="e.g., Zucchini"
+          />
+          <button
+            type="button"
+            onClick={() => {
+              setUseCustom(false);
+              setCustomName("");
+            }}
+            className="text-sm text-blue-500 mt-2 underline"
+          >
+            Choose from list instead
+          </button>
+        </div>
+      )}
 
-      <label className="block mb-2">
-        Planting Date:
+      <div>
+        <label className="block mb-1">Planting date:</label>
         <input
           type="date"
           value={plantingDate}
           onChange={(e) => setPlantingDate(e.target.value)}
-          className="ml-2 p-1 border rounded"
-          required
+          className="p-2 border rounded w-full"
         />
-      </label>
+      </div>
 
-      <label className="block mb-2">
-        Notes:
+      <div>
+        <label className="block mb-1">Notes (optional):</label>
         <textarea
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
-          className="block w-full p-1 border rounded mt-1"
+          rows={3}
+          className="p-2 border rounded w-full"
         />
-      </label>
+      </div>
 
-      <button
-        type="submit"
-        className="mt-3 px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700"
-      >
+      {error && <p className="text-red-500">{error}</p>}
+
+      <button type="submit" className="bg-green-600 text-white px-4 py-2 rounded">
         Add Plant
       </button>
-
-      {message && <p className="mt-2 text-sm">{message}</p>}
     </form>
   );
 };

@@ -34,7 +34,6 @@ function Login() {
       localStorage.setItem("token", data.token);
       localStorage.setItem("username", data.username);
 
-      // Fetch user info including zone & zip after login
       const userRes = await fetch("http://localhost:5000/api/me", {
         headers: {
           Authorization: `Bearer ${data.token}`,
