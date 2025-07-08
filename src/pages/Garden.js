@@ -23,6 +23,52 @@ const Garden = () => {
       });
   };
 
+  const handleEditPlant = async (id, updates) => {
+    const token = localStorage.getItem("token");
+
+    try {
+      const res = await fetch(`http://localhost:5000/api/user/plants/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(updates),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        console.error("Update failed:", err);
+      } else {
+        fetchUserPlants(); 
+      }
+    } catch (err) {
+      console.error("Error updating plant:", err);
+    }
+  };
+
+  const handleDeletePlant = async (id) => {
+    const token = localStorage.getItem("token");
+
+    try {
+      const res = await fetch(`http://localhost:5000/api/user/plants/${id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        console.error("Delete failed:", err);
+      } else {
+        fetchUserPlants();
+      }
+    } catch (err) {
+      console.error("Error deleting plant:", err);
+    }
+  };
+
   useEffect(() => {
     fetchUserPlants();
   }, []);
@@ -37,7 +83,12 @@ const Garden = () => {
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {plants.map((plant) => (
-          <PlantCard key={plant.id} plant={plant} />
+          <PlantCard
+            key={plant.id}
+            plant={plant}
+            onEdit={handleEditPlant}
+            onDelete={handleDeletePlant}
+          />
         ))}
       </div>
     </div>
