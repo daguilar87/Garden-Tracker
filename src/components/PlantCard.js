@@ -44,10 +44,23 @@ const PlantCard = ({ plant, onDelete, onEdit }) => {
         </>
       ) : (
         <>
-          <h2 className="text-xl font-semibold">{plant.plant_name}</h2>
-          <p className="text-sm text-gray-500">
-            Planted: {plant.date_planted || "N/A"}
-          </p>
+          <h2 className="text-xl font-semibold">
+            {plant.nickname || plant.plant_name}
+          </h2>
+          <p className="text-sm text-gray-600">Planted: {plant.date_planted || "N/A"}</p>
+
+          {plant.timeline?.start && plant.timeline?.end && (
+            <p className="text-sm text-green-700">
+              📅 Best planting: {plant.timeline.start} – {plant.timeline.end}
+            </p>
+          )}
+
+          {plant.expected_harvest && (
+            <p className="text-sm text-orange-700">
+              🍅 Est. harvest: {plant.expected_harvest}
+            </p>
+          )}
+
           <p className="mt-2">{plant.notes || "No notes"}</p>
         </>
       )}
@@ -71,3 +84,4 @@ const PlantCard = ({ plant, onDelete, onEdit }) => {
 };
 
 export default PlantCard;
+
