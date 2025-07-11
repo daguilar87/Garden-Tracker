@@ -19,50 +19,60 @@ function WeatherWidget() {
     setLocationName("");
 
     try {
-      let lat, lon, name;
-
-     
-      if (/^\d{5}$/.test(locationInput)) {
-        const zipRes = await axios.get(
-          `https://api.openweathermap.org/data/2.5/weather?zip=${locationInput},US&appid=${API_KEY}`
-        );
-        lat = zipRes.data.coord.lat;
-        lon = zipRes.data.coord.lon;
-        name = zipRes.data.name;
-      } else {
-        const geoRes = await axios.get(
-          `https://api.openweathermap.org/geo/1.0/direct?q=${locationInput}&limit=1&appid=${API_KEY}`
-        );
-
-        if (!geoRes.data.length) throw new Error("Invalid location");
-
-        lat = geoRes.data[0].lat;
-        lon = geoRes.data[0].lon;
-        name = geoRes.data[0].name;
-      }
-
-      const forecastRes = await axios.get(
-        `https://api.openweathermap.org/data/2.5/onecall?lat=${lat}&lon=${lon}&exclude=minutely,hourly,alerts&units=imperial&appid=${API_KEY}`
+      const response = await axios.get(
+        `https://api.openweathermap.org/data/2.5/forecast?q=${locationInput}&units=imperial&appid=${API_KEY}`
       );
 
-      setForecast(forecastRes.data.daily.slice(0, 7)); 
-      setLocationName(name);
+      setLocationName(response.data.city.name);
+
+      // Filter one forecast per day (e.g. 12pm entry)
+      const dailyForecasts = response.data.list.filter((entry) =>
+        entry.dt_txt.includes("12:00:00")
+      ).slice(0, 5);
+
+      setForecast(dailyForecasts);
     } catch (err) {
-      console.error("Error fetching weather:", err);
-      setError("Unable to fetch weather. Please check your location.");
+      console.error("Error fetching forecast:", err);
+      setError("Unable to fetch forecast. Try another location.");
     } finally {
       setLoading(false);
     }
   };
 
-  const formatDate = (timestamp) => {
-    const date = new Date(timestamp * 1000);
+  const formatDate = (dt_txt) => {
+    const date = new Date(dt_txt);
     return date.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
   };
 
+const getIconClass = (iconCode) => {
+  const iconMap = {
+    "01d": "wi-day-sunny",
+    "01n": "wi-night-clear",
+    "02d": "wi-day-cloudy",
+    "02n": "wi-night-alt-cloudy",
+    "03d": "wi-cloud",      
+    "03n": "wi-cloud",
+    "04d": "wi-cloudy",        
+    "04n": "wi-cloudy",
+    "09d": "wi-showers",       
+    "09n": "wi-showers",
+    "10d": "wi-rain",
+    "10n": "wi-rain",
+    "11d": "wi-thunderstorm",
+    "11n": "wi-thunderstorm",
+    "13d": "wi-snow",
+    "13n": "wi-snow",
+    "50d": "wi-fog",           
+    "50n": "wi-fog",
+  };
+
+  return iconMap[iconCode] || "wi-na";
+};
+
+
   return (
-    <div className="bg-white rounded-xl shadow-md p-4 mt-6 w-full max-w-md mx-auto transition-opacity duration-500 ease-in-out">
-      <h3 className="text-lg font-semibold mb-2 text-center">📍 Local Weather</h3>
+    <div className="bg-white rounded-xl shadow-md p-4 mt-6 w-full max-w-4xl mx-auto">
+      <h3 className="text-lg font-semibold mb-2 text-center">📍 Local Forecast</h3>
 
       <div className="flex flex-col sm:flex-row items-center justify-between gap-2 mb-4">
         <input
@@ -80,27 +90,23 @@ function WeatherWidget() {
         </button>
       </div>
 
-      {loading && <p className="text-center text-sm">Loading forecast...</p>}
+      {loading && <p className="text-center text-sm">Loading...</p>}
       {error && <p className="text-red-500 text-sm text-center">{error}</p>}
 
       {forecast.length > 0 && (
         <div className="animate-fade-in">
-          <h4 className="text-center font-semibold text-gray-700 mb-3">{locationName} - 7 Day Forecast</h4>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
+          <h4 className="text-center font-semibold text-gray-700 mb-3">{locationName} - 5 Day Forecast</h4>
+          <div className="flex overflow-x-auto gap-4 px-2 sm:justify-center">
             {forecast.map((day, index) => (
               <div
                 key={index}
-                className="bg-blue-50 p-3 rounded-lg shadow hover:shadow-md transition flex flex-col items-center"
+                className="min-w-[120px] bg-blue-50 p-3 rounded-lg shadow hover:shadow-md transition flex flex-col items-center text-sm"
               >
-                <p className="font-medium">{formatDate(day.dt)}</p>
-                <img
-                  src={`https://openweathermap.org/img/wn/${day.weather[0].icon}@2x.png`}
-                  alt={day.weather[0].description}
-                  className="w-12 h-12"
-                />
+                <p className="font-medium">{formatDate(day.dt_txt)}</p>
+                <i className={`wi ${getIconClass(day.weather[0].icon)} text-4xl text-blue-500 my-2`} />
                 <p className="capitalize text-gray-600">{day.weather[0].description}</p>
-                <p>🌡 {Math.round(day.temp.day)}°F</p>
-                <p className="text-xs text-gray-500">L: {Math.round(day.temp.min)}° | H: {Math.round(day.temp.max)}°</p>
+                <p>🌡 {Math.round(day.main.temp)}°F</p>
+                <p className="text-xs text-gray-500">L: {Math.round(day.main.temp_min)}° | H: {Math.round(day.main.temp_max)}°</p>
               </div>
             ))}
           </div>
