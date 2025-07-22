@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
+import ReactAnimatedWeather from 'react-animated-weather';
 
 function WeatherWidget() {
   const [forecast, setForecast] = useState([]);
@@ -25,7 +26,7 @@ function WeatherWidget() {
 
       setLocationName(response.data.city.name);
 
-      // Filter one forecast per day (e.g. 12pm entry)
+      // Filter one forecast per day (12:00:00 entries)
       const dailyForecasts = response.data.list.filter((entry) =>
         entry.dt_txt.includes("12:00:00")
       ).slice(0, 5);
@@ -44,31 +45,18 @@ function WeatherWidget() {
     return date.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
   };
 
-const getIconClass = (iconCode) => {
-  const iconMap = {
-    "01d": "wi-day-sunny",
-    "01n": "wi-night-clear",
-    "02d": "wi-day-cloudy",
-    "02n": "wi-night-alt-cloudy",
-    "03d": "wi-cloud",      
-    "03n": "wi-cloud",
-    "04d": "wi-cloudy",        
-    "04n": "wi-cloudy",
-    "09d": "wi-showers",       
-    "09n": "wi-showers",
-    "10d": "wi-rain",
-    "10n": "wi-rain",
-    "11d": "wi-thunderstorm",
-    "11n": "wi-thunderstorm",
-    "13d": "wi-snow",
-    "13n": "wi-snow",
-    "50d": "wi-fog",           
-    "50n": "wi-fog",
+  const getAnimatedIcon = (description) => {
+    const desc = description.toLowerCase();
+
+    if (desc.includes("clear")) return "CLEAR_DAY";
+    if (desc.includes("clouds")) return "PARTLY_CLOUDY_DAY";
+    if (desc.includes("rain")) return "RAIN";
+    if (desc.includes("thunderstorm")) return "SLEET";
+    if (desc.includes("snow")) return "SNOW";
+    if (desc.includes("mist") || desc.includes("fog")) return "FOG";
+
+    return "CLOUDY";
   };
-
-  return iconMap[iconCode] || "wi-na";
-};
-
 
   return (
     <div className="bg-white rounded-xl shadow-md p-4 mt-6 w-full max-w-4xl mx-auto">
@@ -96,17 +84,24 @@ const getIconClass = (iconCode) => {
       {forecast.length > 0 && (
         <div className="animate-fade-in">
           <h4 className="text-center font-semibold text-gray-700 mb-3">{locationName} - 5 Day Forecast</h4>
-          <div className="flex overflow-x-auto gap-4 px-2 sm:justify-center">
+          <div className="flex flex-row overflow-x-auto justify-between gap-4 px-2">
             {forecast.map((day, index) => (
               <div
                 key={index}
-                className="min-w-[120px] bg-blue-50 p-3 rounded-lg shadow hover:shadow-md transition flex flex-col items-center text-sm"
+                className="min-w-[140px] bg-blue-50 p-3 rounded-lg shadow hover:shadow-md transition flex flex-col items-center text-sm"
               >
                 <p className="font-medium">{formatDate(day.dt_txt)}</p>
-                <i className={`wi ${getIconClass(day.weather[0].icon)} text-4xl text-blue-500 my-2`} />
-                <p className="capitalize text-gray-600">{day.weather[0].description}</p>
+                <ReactAnimatedWeather
+                  icon={getAnimatedIcon(day.weather[0].description)}
+                  color="#3b82f6"
+                  size={48}
+                  animate={true}
+                />
+                <p className="capitalize text-gray-600 mt-1">{day.weather[0].description}</p>
                 <p>🌡 {Math.round(day.main.temp)}°F</p>
-                <p className="text-xs text-gray-500">L: {Math.round(day.main.temp_min)}° | H: {Math.round(day.main.temp_max)}°</p>
+                <p className="text-xs text-gray-500">
+                  L: {Math.round(day.main.temp_min)}° | H: {Math.round(day.main.temp_max)}°
+                </p>
               </div>
             ))}
           </div>
