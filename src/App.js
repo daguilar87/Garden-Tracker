@@ -1,4 +1,5 @@
-import { Routes, Route } from "react-router-dom";
+import React, { useEffect } from "react";
+import { Routes, Route, useNavigate } from "react-router-dom";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -6,6 +7,28 @@ import Dashboard from "./pages/Dashboard";
 import Garden from "./pages/Garden";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Navbar from "./components/Navbar";
+import { refreshAccessToken } from "./services/authUtils";
+
+function AppWrapper({ children }) {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const initializeAuth = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        const newToken = await refreshAccessToken();
+        if (!newToken) {
+          localStorage.clear();
+          navigate("/login");
+        }
+      }
+    };
+
+    initializeAuth();
+  }, [navigate]);
+
+  return <>{children}</>;
+}
 
 function App() {
   return (
@@ -36,4 +59,10 @@ function App() {
   );
 }
 
-export default App;
+export default function AppWithAuth() {
+  return (
+    <AppWrapper>
+      <App />
+    </AppWrapper>
+  );
+}

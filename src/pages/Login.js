@@ -32,6 +32,7 @@ function Login() {
       }
 
       localStorage.setItem("token", data.token);
+      localStorage.setItem("refreshToken", data.refresh_token);
       localStorage.setItem("username", data.username);
 
       const userRes = await fetch("http://localhost:5000/api/me", {
