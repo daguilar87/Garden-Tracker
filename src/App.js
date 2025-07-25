@@ -7,7 +7,7 @@ import Dashboard from "./pages/Dashboard";
 import Garden from "./pages/Garden";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Navbar from "./components/Navbar";
-import { refreshAccessToken } from "./services/authUtils";
+import { refreshAccessToken, isTokenExpired } from "./services/authUtils";
 
 function AppWrapper({ children }) {
   const navigate = useNavigate();
@@ -15,7 +15,8 @@ function AppWrapper({ children }) {
   useEffect(() => {
     const initializeAuth = async () => {
       const token = localStorage.getItem("token");
-      if (!token) {
+
+      if (!token || isTokenExpired(token)) {
         const newToken = await refreshAccessToken();
         if (!newToken) {
           localStorage.clear();
@@ -29,6 +30,7 @@ function AppWrapper({ children }) {
 
   return <>{children}</>;
 }
+
 
 function App() {
   return (

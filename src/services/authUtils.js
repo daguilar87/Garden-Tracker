@@ -21,3 +21,16 @@ export const refreshAccessToken = async () => {
     return null;
   }
 };
+
+export const isTokenExpired = (token) => {
+  if (!token) return true;
+
+  try {
+    const [, payload] = token.split(".");
+    const decoded = JSON.parse(atob(payload));
+    const currentTime = Date.now() / 1000;
+    return decoded.exp < currentTime;
+  } catch (e) {
+    return true;
+  }
+};
