@@ -13,27 +13,23 @@ function WeatherWidget() {
 
   const getAnimatedIcon = (description) => {
     const desc = description.toLowerCase();
-
     if (desc.includes("clear")) return "CLEAR_DAY";
     if (desc.includes("clouds")) return "PARTLY_CLOUDY_DAY";
     if (desc.includes("rain")) return "RAIN";
     if (desc.includes("thunderstorm")) return "SLEET";
     if (desc.includes("snow")) return "SNOW";
     if (desc.includes("mist") || desc.includes("fog")) return "FOG";
-
     return "CLOUDY";
   };
 
   const getIconColor = (description) => {
     const desc = description.toLowerCase();
-
     if (desc.includes("clear")) return "#f6e58d";
     if (desc.includes("clouds")) return "#dff9fb";
     if (desc.includes("rain")) return "#74b9ff";
     if (desc.includes("thunderstorm")) return "#95afc0";
     if (desc.includes("snow")) return "#dfe6e9";
     if (desc.includes("mist") || desc.includes("fog")) return "#b2bec3";
-
     return "#576574";
   };
 
@@ -114,13 +110,14 @@ function WeatherWidget() {
           <h4 className="text-center font-semibold text-gray-700 mb-3">
             {locationName} - 5 Day Forecast
           </h4>
-          <div className="flex flex-wrap justify-center gap-6 px-2">
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 justify-center px-2">
             {forecast.map((day, index) => {
               const iconColor = getIconColor(day.weather[0].description);
               return (
                 <div
                   key={index}
-                  className="w-32 bg-white p-4 rounded-lg shadow hover:shadow-md transition flex flex-col items-center text-sm"
+                  className="bg-white rounded-xl shadow p-4 flex flex-col items-center text-center h-56"
                 >
                   <p className="font-medium">{formatDate(day.dt_txt)}</p>
                   <ReactAnimatedWeather
@@ -129,10 +126,12 @@ function WeatherWidget() {
                     size={48}
                     animate={true}
                   />
-                  <p className="capitalize text-gray-600 mt-1">
+                  <p className="capitalize text-gray-600 mt-1 text-sm px-1 truncate w-full">
                     {day.weather[0].description}
                   </p>
-                  <p className="mt-1">{Math.round(day.main.temp)}°F</p>
+                  <p className="mt-auto font-semibold text-lg">{Math.round(day.main.temp)}°F</p>
+
+                  <p className="mt-auto font-semibold text-lg">{Math.round(day.main.temp)}°F</p>
                   <p className="text-xs text-gray-500">
                     L: {Math.round(day.main.temp_min)}° | H: {Math.round(day.main.temp_max)}°
                   </p>
