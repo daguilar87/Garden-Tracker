@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import ReactAnimatedWeather from "react-animated-weather";
+import dayjs from "dayjs";
 
 function WeatherWidget() {
   const [forecast, setForecast] = useState([]);
@@ -33,37 +34,48 @@ function WeatherWidget() {
     return "#576574";
   };
 
-  const fetchForecast = useCallback(
-    async (location) => {
-      if (!location) return;
+  const processForecastData = (list) => {
+    const grouped = {};
 
-      setLoading(true);
-      setError("");
-      setForecast([]);
-      setLocationName("");
-
-      try {
-        const response = await axios.get(
-          `https://api.openweathermap.org/data/2.5/forecast?q=${location}&units=imperial&appid=${API_KEY}`
-        );
-
-        setLocationName(response.data.city.name);
-
-        const dailyForecasts = response.data.list
-          .filter((entry) => entry.dt_txt.includes("12:00:00"))
-          .slice(0, 5);
-
-        setForecast(dailyForecasts);
-        localStorage.setItem("weatherLocation", location);
-      } catch (err) {
-        console.error("Error fetching forecast:", err);
-        setError("Unable to fetch forecast. Try another location.");
-      } finally {
-        setLoading(false);
+    list.forEach((entry) => {
+      const dateKey = dayjs(entry.dt_txt).format("YYYY-MM-DD");
+      if (!grouped[dateKey]) {
+        grouped[dateKey] = entry;
+      } else {
+        const currentHour = parseInt(dayjs(grouped[dateKey].dt_txt).format("H"));
+        const newHour = parseInt(dayjs(entry.dt_txt).format("H"));
+        if (Math.abs(newHour - 12) < Math.abs(currentHour - 12)) {
+          grouped[dateKey] = entry;
+        }
       }
-    },
-    [API_KEY]
-  );
+    });
+
+    const sortedDates = Object.keys(grouped).sort();
+    return sortedDates.slice(0, 5).map((date) => grouped[date]);
+  };
+
+  const fetchForecast = useCallback(async (location) => {
+    if (!location) return;
+    setLoading(true);
+    setError("");
+    setForecast([]);
+    setLocationName("");
+
+    try {
+      const response = await axios.get(
+        `https://api.openweathermap.org/data/2.5/forecast?q=${location}&units=imperial&appid=${API_KEY}`
+      );
+      setLocationName(response.data.city.name);
+      const filtered = processForecastData(response.data.list);
+      setForecast(filtered);
+      localStorage.setItem("weatherLocation", location);
+    } catch (err) {
+      console.error("Error fetching forecast:", err);
+      setError("Unable to fetch forecast. Try another location.");
+    } finally {
+      setLoading(false);
+    }
+  }, [API_KEY]);
 
   useEffect(() => {
     const savedLocation = localStorage.getItem("weatherLocation");
@@ -126,12 +138,10 @@ function WeatherWidget() {
                     size={48}
                     animate={true}
                   />
-                  <p className="capitalize text-gray-600 mt-1 text-sm px-1 truncate w-full">
+                  <p className="capitalize text-gray-600 text-sm px-1 truncate w-full">
                     {day.weather[0].description}
                   </p>
-                  <p className="mt-auto font-semibold text-lg">{Math.round(day.main.temp)}°F</p>
-
-                  <p className="mt-auto font-semibold text-lg">{Math.round(day.main.temp)}°F</p>
+                  <p className="font-semibold text-lg">{Math.round(day.main.temp)}°F</p>
                   <p className="text-xs text-gray-500">
                     L: {Math.round(day.main.temp_min)}° | H: {Math.round(day.main.temp_max)}°
                   </p>
