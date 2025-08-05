@@ -9,11 +9,20 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import Navbar from "./components/Navbar";
 import { refreshAccessToken, isTokenExpired } from "./services/authUtils";
 
+
 function AppWrapper({ children }) {
   const navigate = useNavigate();
 
   useEffect(() => {
     const initializeAuth = async () => {
+      const publicRoutes = ["/", "/login", "/register"];
+      const currentPath = window.location.pathname;
+
+     
+      if (publicRoutes.includes(currentPath)) {
+        return;
+      }
+
       const token = localStorage.getItem("token");
 
       if (!token || isTokenExpired(token)) {
@@ -60,6 +69,7 @@ function App() {
     </>
   );
 }
+
 
 export default function AppWithAuth() {
   return (
