@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
+import { Helmet } from "react-helmet";
 
 export default function Home() {
   const [user, setUser] = useState(null);
   const [loadingUser, setLoadingUser] = useState(true);
 
-  // Check for logged in user
+  
   useEffect(() => {
     const token = localStorage.getItem("token");
     const username = localStorage.getItem("username");
@@ -23,8 +24,13 @@ export default function Home() {
       className="min-h-screen bg-cover bg-center flex flex-col justify-center items-center text-white px-4"
       style={{
         backgroundImage: `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('/images/homebg.jpg')`,
+        backgroundColor: "#1a202c",
       }}
     >
+      <Helmet>
+        <title>Home | Garden Tracker</title>
+      </Helmet>
+
       <motion.div
         className="text-center max-w-2xl"
         initial={{ opacity: 0, y: 50 }}
@@ -34,34 +40,53 @@ export default function Home() {
         <h1 className="text-5xl sm:text-6xl font-extrabold mb-6 drop-shadow-md">
           Grow Smarter with Your Garden Tracker 🌿
         </h1>
-        <p className="text-lg sm:text-xl text-gray-200 mb-8">
+
+        <p className="text-lg sm:text-xl text-gray-200 mb-6">
           Monitor your plants, plan your seasons, and stay ahead with local weather integration.
         </p>
 
-        {!loadingUser && !user ? (
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+        {loadingUser ? (
+          <p className="text-gray-300 animate-pulse text-lg">Checking login status...</p>
+        ) : !user ? (
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <Link to="/login">
-              <button className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-6 rounded-xl shadow-lg transition">
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-6 rounded-xl shadow-lg transition"
+                aria-label="Log in to your account"
+              >
                 Log In
-              </button>
+              </motion.button>
             </Link>
             <Link to="/register">
-              <button className="bg-white text-green-800 font-semibold py-2 px-6 rounded-xl shadow-lg hover:bg-green-100 transition">
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                className="w-full sm:w-auto bg-white text-green-800 font-semibold py-2 px-6 rounded-xl shadow-lg hover:bg-green-100 transition"
+                aria-label="Create a new account"
+              >
                 Get Started
-              </button>
+              </motion.button>
             </Link>
           </div>
-        ) : null}
+        ) : (
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <div>
+              <h2 className="text-2xl font-bold text-green-100 mb-2">
+                Welcome back, {user.username}! 🌱
+              </h2>
+{/* <p className="text-sm text-gray-300 italic mb-4">
+  You're in USDA Zone 8b – perfect time to plant tomatoes! 🍅
+</p> */}
 
-        {user && (
-          <div className="flex flex-col gap-4 justify-center">
-            <h2 className="text-2xl font-bold text-green-100 mb-2">
-              Welcome back, {user.username}! 🌱
-            </h2>
+            </div>
             <Link to="/dashboard">
-              <button className="bg-white text-green-800 font-semibold py-2 px-6 rounded-xl shadow-lg hover:bg-green-100 transition">
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                className="w-full sm:w-auto bg-white text-green-800 font-semibold py-2 px-6 rounded-xl shadow-lg hover:bg-green-100 transition"
+                aria-label="Go to your dashboard"
+              >
                 Go to Dashboard
-              </button>
+              </motion.button>
             </Link>
           </div>
         )}
