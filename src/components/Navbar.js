@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Home, LogIn, UserPlus, Grid, Leaf, LogOut } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 function Navbar() {
@@ -13,73 +13,55 @@ function Navbar() {
     navigate("/login");
   };
 
+ 
+  const menuItems = [
+    { label: "Home", to: "/", icon: <Home size={20} /> },
+    ...(token
+      ? [
+          { label: "Dashboard", to: "/dashboard", icon: <Grid size={20} /> },
+          { label: "Garden", to: "/garden", icon: <Leaf size={20} /> },
+          { label: "Logout", onClick: handleLogout, icon: <LogOut size={20} /> },
+        ]
+      : [
+          { label: "Login", to: "/login", icon: <LogIn size={20} /> },
+          { label: "Register", to: "/register", icon: <UserPlus size={20} /> },
+        ]),
+  ];
+
   return (
     <nav className="sticky top-0 z-50 bg-green-100 shadow-md">
       <div className="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
-       
-        <Link to="/" className="text-xl font-bold text-green-900">
+        
+        <Link to="/" className="text-xl font-bold text-green-900 flex items-center gap-2">
           🌱 Garden Tracker
         </Link>
 
+        
         <ul className="hidden md:flex gap-6 items-center">
-          <li>
-            <Link
-              to="/"
-              className="text-green-800 font-semibold hover:text-green-600 transition"
-            >
-              Home
-            </Link>
-          </li>
-          {token ? (
-            <>
-              <li>
+          {menuItems.map((item) =>
+            item.to ? (
+              <li key={item.label}>
                 <Link
-                  to="/dashboard"
-                  className="text-green-800 font-semibold hover:text-green-600 transition"
+                  to={item.to}
+                  className="flex items-center gap-1 text-green-800 font-semibold hover:text-green-600 transition"
                 >
-                  Dashboard
+                  {item.icon} {item.label}
                 </Link>
               </li>
-              <li>
-                <Link
-                  to="/garden"
-                  className="text-green-800 font-semibold hover:text-green-600 transition"
-                >
-                  Garden
-                </Link>
-              </li>
-              <li>
+            ) : (
+              <li key={item.label}>
                 <button
-                  onClick={handleLogout}
-                  className="px-3 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
+                  onClick={item.onClick}
+                  className="flex items-center gap-1 px-3 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
                 >
-                  Logout
+                  {item.icon} {item.label}
                 </button>
               </li>
-            </>
-          ) : (
-            <>
-              <li>
-                <Link
-                  to="/login"
-                  className="text-green-800 font-semibold hover:text-green-600 transition"
-                >
-                  Login
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/register"
-                  className="text-green-800 font-semibold hover:text-green-600 transition"
-                >
-                  Register
-                </Link>
-              </li>
-            </>
+            )
           )}
         </ul>
 
-     
+        
         <button
           className="md:hidden text-green-800"
           onClick={() => setMenuOpen(!menuOpen)}
@@ -88,7 +70,7 @@ function Navbar() {
         </button>
       </div>
 
-     
+      
       <AnimatePresence>
         {menuOpen && (
           <motion.div
@@ -99,68 +81,30 @@ function Navbar() {
             transition={{ duration: 0.3 }}
           >
             <ul className="flex flex-col gap-4 p-4">
-              <li>
-                <Link
-                  to="/"
-                  className="block text-green-800 font-semibold hover:text-green-600 transition"
-                  onClick={() => setMenuOpen(false)}
-                >
-                  Home
-                </Link>
-              </li>
-              {token ? (
-                <>
-                  <li>
+              {menuItems.map((item) =>
+                item.to ? (
+                  <li key={item.label}>
                     <Link
-                      to="/dashboard"
-                      className="block text-green-800 font-semibold hover:text-green-600 transition"
+                      to={item.to}
+                      className="flex items-center gap-1 text-green-800 font-semibold hover:text-green-600 transition"
                       onClick={() => setMenuOpen(false)}
                     >
-                      Dashboard
+                      {item.icon} {item.label}
                     </Link>
                   </li>
-                  <li>
-                    <Link
-                      to="/garden"
-                      className="block text-green-800 font-semibold hover:text-green-600 transition"
-                      onClick={() => setMenuOpen(false)}
-                    >
-                      Garden
-                    </Link>
-                  </li>
-                  <li>
+                ) : (
+                  <li key={item.label}>
                     <button
                       onClick={() => {
-                        handleLogout();
+                        item.onClick();
                         setMenuOpen(false);
                       }}
-                      className="w-full text-left px-3 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
+                      className="w-full flex items-center gap-1 px-3 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
                     >
-                      Logout
+                      {item.icon} {item.label}
                     </button>
                   </li>
-                </>
-              ) : (
-                <>
-                  <li>
-                    <Link
-                      to="/login"
-                      className="block text-green-800 font-semibold hover:text-green-600 transition"
-                      onClick={() => setMenuOpen(false)}
-                    >
-                      Login
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      to="/register"
-                      className="block text-green-800 font-semibold hover:text-green-600 transition"
-                      onClick={() => setMenuOpen(false)}
-                    >
-                      Register
-                    </Link>
-                  </li>
-                </>
+                )
               )}
             </ul>
           </motion.div>
