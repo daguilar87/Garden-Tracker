@@ -13,7 +13,6 @@ function Navbar() {
     navigate("/login");
   };
 
- 
   const menuItems = [
     { label: "Home", to: "/", icon: <Home size={20} /> },
     ...(token
@@ -30,44 +29,45 @@ function Navbar() {
 
   return (
     <nav className="sticky top-0 z-50 bg-green-100 shadow-md">
-      <div className="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
+      <div className="w-full px-4 py-3 flex justify-between items-center">
         
-        <Link to="/" className="text-xl font-bold text-green-900 flex items-center gap-2">
+                <Link to="/" className="text-xl font-bold text-green-900 flex items-center gap-2">
           🌱 Garden Tracker
         </Link>
 
-        
-        <ul className="hidden md:flex gap-6 items-center">
-          {menuItems.map((item) =>
-            item.to ? (
-              <li key={item.label}>
-                <Link
-                  to={item.to}
-                  className="flex items-center gap-1 text-green-800 font-semibold hover:text-green-600 transition"
-                >
-                  {item.icon} {item.label}
-                </Link>
-              </li>
-            ) : (
-              <li key={item.label}>
-                <button
-                  onClick={item.onClick}
-                  className="flex items-center gap-1 px-3 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
-                >
-                  {item.icon} {item.label}
-                </button>
-              </li>
-            )
-          )}
-        </ul>
+     
+        <div className="flex items-center">
+          <ul className="hidden md:flex gap-6 items-center">
+            {menuItems.map((item) =>
+              item.to ? (
+                <li key={item.label}>
+                  <Link
+                    to={item.to}
+                    className="flex items-center gap-1 text-green-800 font-semibold hover:text-green-600 transition"
+                  >
+                    {item.icon} {item.label}
+                  </Link>
+                </li>
+              ) : (
+                <li key={item.label}>
+                  <button
+                    onClick={item.onClick}
+                    className="flex items-center gap-1 px-3 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
+                  >
+                    {item.icon} {item.label}
+                  </button>
+                </li>
+              )
+            )}
+          </ul>
 
-        
-        <button
-          className="md:hidden text-green-800"
-          onClick={() => setMenuOpen(!menuOpen)}
-        >
-          {menuOpen ? <X size={28} /> : <Menu size={28} />}
-        </button>
+          <button
+            className="md:hidden text-green-800 ml-4"
+            onClick={() => setMenuOpen(!menuOpen)}
+          >
+            {menuOpen ? <X size={28} /> : <Menu size={28} />}
+          </button>
+        </div>
       </div>
 
       
