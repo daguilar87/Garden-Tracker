@@ -8,7 +8,9 @@ const Garden = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [sortOption, setSortOption] = useState("date");
 
+ 
   const fetchUserPlants = () => {
+    setLoading(true);
     fetch("http://localhost:5000/api/user/plants", {
       headers: {
         Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -16,15 +18,18 @@ const Garden = () => {
     })
       .then((res) => res.json())
       .then((data) => {
+        if (!Array.isArray(data)) data = [];
         setPlants(data);
         setLoading(false);
       })
       .catch((err) => {
         console.error("Error fetching plants:", err);
+        setPlants([]);
         setLoading(false);
       });
   };
 
+ 
   const handleEditPlant = async (id, updates) => {
     const token = localStorage.getItem("token");
 
@@ -49,6 +54,7 @@ const Garden = () => {
     }
   };
 
+  
   const handleDeletePlant = async (id) => {
     const token = localStorage.getItem("token");
 
@@ -75,6 +81,7 @@ const Garden = () => {
     fetchUserPlants();
   }, []);
 
+ 
   const filteredPlants = plants.filter((plant) =>
     plant.plant_name.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -97,6 +104,7 @@ const Garden = () => {
         🌱 My Garden
       </h1>
 
+      
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <input
           type="text"
@@ -116,10 +124,14 @@ const Garden = () => {
         </select>
       </div>
 
+      
       <AddPlantForm onPlantAdded={fetchUserPlants} />
 
+      
       {!sortedPlants.length ? (
-        <p className="text-gray-500 italic mt-6">Your garden is empty. Add your first plant above! 🌿</p>
+        <p className="text-gray-500 italic mt-6">
+          Your garden is empty. Add your first plant above! 🌿
+        </p>
       ) : (
         <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {sortedPlants.map((plant) => (

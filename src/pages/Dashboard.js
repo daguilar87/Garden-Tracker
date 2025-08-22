@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import WeatherWidget from "../components/WeatherWidget";
 import ZipZoneForm from "../components/ZipZoneForm";
-import PlantTimeline from "../components/PlantTimeLine";
+import PlantTimeLine from "../components/PlantTimeLine";
 
 export default function Dashboard() {
   const [zone, setZone] = useState("");
@@ -13,6 +13,7 @@ export default function Dashboard() {
   const [manualEntry, setManualEntry] = useState(false);
   const [customPlant, setCustomPlant] = useState("");
 
+
   useEffect(() => {
     const storedZone = localStorage.getItem("zone");
     const storedCity = localStorage.getItem("city") || localStorage.getItem("zip");
@@ -20,12 +21,14 @@ export default function Dashboard() {
     if (storedCity) setCity(storedCity);
   }, []);
 
+
   useEffect(() => {
     fetch("http://127.0.0.1:5000/api/plants")
       .then(res => res.json())
       .then(data => setPlantOptions(data))
       .catch(err => console.error("Failed to load plant options:", err));
   }, []);
+
 
   useEffect(() => {
     const selectedPlant = manualEntry ? customPlant : plant;
@@ -145,7 +148,7 @@ export default function Dashboard() {
           </label>
 
           {error && <p className="text-red-600">{error}</p>}
-          <PlantTimeline info={info} />
+          <PlantTimeLine info={info} zone={zone} />
 
           <div className="mt-6">
             <h3 className="text-lg font-semibold">Change ZIP Code</h3>
