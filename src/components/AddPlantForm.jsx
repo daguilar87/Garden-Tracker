@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { ChevronDown, ChevronUp, Plus } from "lucide-react";
 
 const AddPlantForm = ({ onPlantAdded }) => {
   const [plantOptions, setPlantOptions] = useState([]);
@@ -8,19 +9,27 @@ const AddPlantForm = ({ onPlantAdded }) => {
   const [plantingDate, setPlantingDate] = useState("");
   const [notes, setNotes] = useState("");
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [open, setOpen] = useState(false);
+  const [loadedPlants, setLoadedPlants] = useState(false);
 
+  // Fetch plant options only when form is opened the first time
   useEffect(() => {
-    fetch("http://127.0.0.1:5000/api/plants")
-      .then((res) => res.json())
-      .then((data) => setPlantOptions(data))
-      .catch((err) => {
-        console.error("Error loading plant options:", err);
-        setError("Failed to load plant list.");
-      });
-  }, []);
+    if (open && !loadedPlants) {
+      fetch("http://127.0.0.1:5000/api/plants")
+        .then((res) => res.json())
+        .then((data) => {
+          setPlantOptions(data);
+          setLoadedPlants(true);
+        })
+        .catch(() => setError("Failed to load plant list."));
+    }
+  }, [open, loadedPlants]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
+    setSuccess("");
 
     const token = localStorage.getItem("token");
     if (!token) {
@@ -29,16 +38,14 @@ const AddPlantForm = ({ onPlantAdded }) => {
     }
 
     if (!plantingDate || (!useCustom && !plantId) || (useCustom && !customName)) {
-      setError("All fields are required.");
+      setError("Please fill in all required fields.");
       return;
     }
 
     const payload = {
       planting_date: plantingDate,
       notes,
-      ...(useCustom
-        ? { plant_name: customName }
-        : { plant_id: plantId }),
+      ...(useCustom ? { plant_name: customName } : { plant_id: plantId }),
     };
 
     try {
@@ -51,103 +58,134 @@ const AddPlantForm = ({ onPlantAdded }) => {
         body: JSON.stringify(payload),
       });
 
-      const data = await res.json();
+      let data = {};
+      try {
+        data = await res.json();
+      } catch {}
 
       if (!res.ok) {
         setError(data.error || "Failed to add plant.");
       } else {
-        setError("");
+        // Reset form instantly
         setPlantId("");
         setCustomName("");
         setPlantingDate("");
         setNotes("");
-        onPlantAdded();
+        setSuccess("✅ Plant added successfully!");
+
+        // Refresh garden without blocking UI
+        if (onPlantAdded) {
+          setTimeout(() => onPlantAdded(), 0);
+        }
+
+        // Close form after short delay
+        setTimeout(() => {
+          setSuccess("");
+          setOpen(false);
+        }, 1000);
       }
     } catch (err) {
-      console.error("Error submitting plant:", err);
+      console.error(err);
       setError("Something went wrong.");
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 bg-white p-4 rounded shadow">
-      <h3 className="text-lg font-semibold">Add a Plant</h3>
-
-      {!useCustom ? (
-        <div>
-          <label className="block mb-1">Select a plant:</label>
-          <select
-            value={plantId}
-            onChange={(e) => setPlantId(e.target.value)}
-            className="p-2 border rounded w-full"
-          >
-            <option value="">-- Choose from list --</option>
-            {plantOptions.map((opt) => (
-              <option key={opt.id} value={opt.id}>
-                {opt.name}
-              </option>
-            ))}
-          </select>
-          <button
-            type="button"
-            onClick={() => {
-              setUseCustom(true);
-              setPlantId("");
-            }}
-            className="text-sm text-blue-500 mt-2 underline"
-          >
-            Enter manually instead
-          </button>
-        </div>
-      ) : (
-        <div>
-          <label className="block mb-1">Plant name:</label>
-          <input
-            type="text"
-            value={customName}
-            onChange={(e) => setCustomName(e.target.value)}
-            className="p-2 border rounded w-full"
-            placeholder="e.g., Zucchini"
-          />
-          <button
-            type="button"
-            onClick={() => {
-              setUseCustom(false);
-              setCustomName("");
-            }}
-            className="text-sm text-blue-500 mt-2 underline"
-          >
-            Choose from list instead
-          </button>
-        </div>
-      )}
-
-      <div>
-        <label className="block mb-1">Planting date:</label>
-        <input
-          type="date"
-          value={plantingDate}
-          onChange={(e) => setPlantingDate(e.target.value)}
-          className="p-2 border rounded w-full"
-        />
-      </div>
-
-      <div>
-        <label className="block mb-1">Notes (optional):</label>
-        <textarea
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          rows={3}
-          className="p-2 border rounded w-full"
-        />
-      </div>
-
-      {error && <p className="text-red-500">{error}</p>}
-
-      <button type="submit" className="bg-green-600 text-white px-4 py-2 rounded">
-        Add Plant
+    <div className="bg-white rounded-2xl shadow p-4 mb-6">
+      <button
+        onClick={() => setOpen((prev) => !prev)}
+        className="flex items-center justify-between w-full text-left text-lg font-semibold text-green-700"
+      >
+        <span className="flex items-center gap-2">
+          <Plus className="w-5 h-5" /> Add a Plant
+        </span>
+        {open ? <ChevronUp /> : <ChevronDown />}
       </button>
-    </form>
+
+      {open && (
+        <form onSubmit={handleSubmit} className="mt-4 space-y-4">
+          {!useCustom ? (
+            <div>
+              <label className="block mb-1 font-medium">Select a plant:</label>
+              <select
+                value={plantId}
+                onChange={(e) => setPlantId(e.target.value)}
+                className="p-2 border rounded-lg w-full"
+              >
+                <option value="">-- Choose from list --</option>
+                {plantOptions.map((opt) => (
+                  <option key={opt.id} value={opt.id}>
+                    {opt.name}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                onClick={() => {
+                  setUseCustom(true);
+                  setPlantId("");
+                }}
+                className="mt-2 text-green-600 hover:text-green-800 text-sm"
+              >
+                Or enter a custom name
+              </button>
+            </div>
+          ) : (
+            <div>
+              <label className="block mb-1 font-medium">Plant name:</label>
+              <input
+                type="text"
+                value={customName}
+                onChange={(e) => setCustomName(e.target.value)}
+                className="p-2 border rounded-lg w-full"
+                placeholder="e.g., Zucchini"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  setUseCustom(false);
+                  setCustomName("");
+                }}
+                className="mt-2 text-green-600 hover:text-green-800 text-sm"
+              >
+                Choose from list instead
+              </button>
+            </div>
+          )}
+
+          <div>
+            <label className="block mb-1 font-medium">Planting date:</label>
+            <input
+              type="date"
+              value={plantingDate}
+              onChange={(e) => setPlantingDate(e.target.value)}
+              className="p-2 border rounded-lg w-full"
+            />
+          </div>
+
+          <div>
+            <label className="block mb-1 font-medium">Notes (optional):</label>
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={3}
+              className="p-2 border rounded-lg w-full"
+              placeholder="Any tips or observations..."
+            />
+          </div>
+
+          {error && <p className="text-red-500 text-sm">{error}</p>}
+          {success && <p className="text-green-600 text-sm">{success}</p>}
+
+          <button
+            type="submit"
+            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg w-full"
+          >
+            Add Plant
+          </button>
+        </form>
+      )}
+    </div>
   );
 };
 

@@ -8,7 +8,7 @@ const months = [
 export default function PlantTimeline({ info, zone }) {
   if (!info || !info.zones) return <p className="text-gray-500">No timeline data available.</p>;
 
-  // Find zone key case-insensitively
+  
   const zoneKey = Object.keys(info.zones).find(z => z.toLowerCase() === zone.toLowerCase());
   if (!zoneKey) return <p className="text-gray-500">No timeline data available.</p>;
 
