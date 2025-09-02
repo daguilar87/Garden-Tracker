@@ -8,18 +8,25 @@ const PlantCard = ({ plant, onDelete, onEdit }) => {
   const [daysRemaining, setDaysRemaining] = useState(null);
   const [progressPercent, setProgressPercent] = useState(0);
 
-
+  
   useEffect(() => {
-    if (plant.date_planted && plant.growth_days) {
+    if (plant?.date_planted && plant?.growth_days) {
       const plantedDate = new Date(plant.date_planted);
-      const totalDays = plant.growth_days;
+      const totalDays = Number(plant.growth_days) || 0;
+
       const today = new Date();
-      const daysPassed = Math.floor((today - plantedDate) / (1000 * 60 * 60 * 24));
+      const daysPassed = Math.floor(
+        (today - plantedDate) / (1000 * 60 * 60 * 24)
+      );
+
       const remaining = totalDays - daysPassed;
       setDaysRemaining(remaining);
 
-      const progress = Math.min((daysPassed / totalDays) * 100, 100);
-      setProgressPercent(progress);
+      const rawProgress =
+        totalDays > 0 ? (daysPassed / totalDays) * 100 : 0;
+
+      const clamped = Math.max(0, Math.min(100, rawProgress));
+      setProgressPercent(clamped);
     } else {
       setDaysRemaining(null);
       setProgressPercent(0);
@@ -36,6 +43,17 @@ const PlantCard = ({ plant, onDelete, onEdit }) => {
     }
     setEditing(!editing);
   };
+
+  const overdue = daysRemaining != null && daysRemaining < 0;
+  const readyToday = daysRemaining === 0;
+  const barColor = overdue
+    ? "bg-red-500"
+    : readyToday
+    ? "bg-green-500"
+    : "bg-blue-400";
+
+  
+  const barWidth = `${progressPercent}%`;
 
   return (
     <div className="border rounded-xl p-4 shadow-lg bg-white hover:shadow-2xl transition duration-300">
@@ -68,7 +86,7 @@ const PlantCard = ({ plant, onDelete, onEdit }) => {
             {plant.nickname || plant.plant_name}
           </h2>
 
-         
+          
           <p className="text-sm text-gray-600 mb-1">
             🌱 Planted:{" "}
             {plant.date_planted
@@ -80,12 +98,15 @@ const PlantCard = ({ plant, onDelete, onEdit }) => {
               : "N/A"}
           </p>
 
-          
-          {!plant.date_planted && plant.timeline?.start_month && plant.timeline?.end_month && (
-            <p className="text-sm text-green-700 mb-1">
-              📍 Best planting: {plant.timeline.start_month} – {plant.timeline.end_month}
-            </p>
-          )}
+        
+          {!plant.date_planted &&
+            plant.timeline?.start_month &&
+            plant.timeline?.end_month && (
+              <p className="text-sm text-green-700 mb-1">
+                📍 Best planting: {plant.timeline.start_month} –{" "}
+                {plant.timeline.end_month}
+              </p>
+            )}
 
           
           {plant.growth_days && (
@@ -97,12 +118,19 @@ const PlantCard = ({ plant, onDelete, onEdit }) => {
           
           {daysRemaining != null && daysRemaining > 0 && (
             <p className="text-sm text-orange-700 mb-1">
-              📅 Estimated harvest in: {daysRemaining} days
+              📅 Estimated harvest in: {daysRemaining} day
+              {daysRemaining !== 1 ? "s" : ""}
             </p>
           )}
-          {daysRemaining != null && daysRemaining <= 0 && (
+          {daysRemaining === 0 && (
             <p className="text-sm text-green-600 font-semibold mb-1">
               ✅ Ready for harvest!
+            </p>
+          )}
+          {daysRemaining != null && daysRemaining < 0 && (
+            <p className="text-sm text-red-600 font-semibold mb-1">
+              ⚠️ Overdue by {Math.abs(daysRemaining)} day
+              {Math.abs(daysRemaining) !== 1 ? "s" : ""}
             </p>
           )}
 
@@ -118,16 +146,14 @@ const PlantCard = ({ plant, onDelete, onEdit }) => {
             </p>
           )}
 
-          
+         
           {plant.growth_days && (
-            <div className="w-full h-6 bg-gray-200 rounded-full mb-2 relative">
+            <div className="w-full h-6 bg-gray-200 rounded-full mb-2 relative overflow-hidden">
               <div
-                className={`h-6 rounded-full ${
-                  daysRemaining <= 0 ? "bg-green-500" : "bg-blue-400"
-                }`}
-                style={{ width: `${progressPercent}%` }}
+                className={`h-6 rounded-full transition-[width,background-color] duration-300 ${barColor}`}
+                style={{ width: barWidth }}
               />
-              <span className="absolute w-full text-center text-xs font-medium text-white top-0 left-0 h-6 flex items-center justify-center">
+              <span className="absolute inset-0 flex items-center justify-center text-xs font-medium text-white">
                 {Math.floor(progressPercent)}%
               </span>
             </div>
@@ -138,7 +164,6 @@ const PlantCard = ({ plant, onDelete, onEdit }) => {
         </>
       )}
 
-      
       <div className="flex gap-2 mt-4">
         <button
           className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition"

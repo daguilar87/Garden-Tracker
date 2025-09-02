@@ -13,7 +13,6 @@ const AddPlantForm = ({ onPlantAdded }) => {
   const [open, setOpen] = useState(false);
   const [loadedPlants, setLoadedPlants] = useState(false);
 
-  // Fetch plant options only when form is opened the first time
   useEffect(() => {
     if (open && !loadedPlants) {
       fetch("http://127.0.0.1:5000/api/plants")
@@ -32,15 +31,10 @@ const AddPlantForm = ({ onPlantAdded }) => {
     setSuccess("");
 
     const token = localStorage.getItem("token");
-    if (!token) {
-      setError("You must be logged in.");
-      return;
-    }
+    if (!token) return setError("You must be logged in.");
 
-    if (!plantingDate || (!useCustom && !plantId) || (useCustom && !customName)) {
-      setError("Please fill in all required fields.");
-      return;
-    }
+    if (!plantingDate || (!useCustom && !plantId) || (useCustom && !customName))
+      return setError("Please fill in all required fields.");
 
     const payload = {
       planting_date: plantingDate,
@@ -66,19 +60,14 @@ const AddPlantForm = ({ onPlantAdded }) => {
       if (!res.ok) {
         setError(data.error || "Failed to add plant.");
       } else {
-        // Reset form instantly
+        if (onPlantAdded) onPlantAdded(data);
+
         setPlantId("");
         setCustomName("");
         setPlantingDate("");
         setNotes("");
         setSuccess("✅ Plant added successfully!");
 
-        // Refresh garden without blocking UI
-        if (onPlantAdded) {
-          setTimeout(() => onPlantAdded(), 0);
-        }
-
-        // Close form after short delay
         setTimeout(() => {
           setSuccess("");
           setOpen(false);

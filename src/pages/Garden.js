@@ -7,49 +7,70 @@ const Garden = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortOption, setSortOption] = useState("date");
+  const [error, setError] = useState(null);
+  const [message, setMessage] = useState(null);
 
-  
   const fetchUserPlants = useCallback(async () => {
     try {
       setLoading(true);
+      setError(null);
       const res = await fetch("http://localhost:5000/api/user/plants", {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
+
+      if (!res.ok) throw new Error("Failed to fetch plants");
+
       const data = await res.json();
       setPlants(Array.isArray(data) ? data : []);
     } catch (err) {
-      console.error("Error fetching plants:", err);
+      console.error(err);
+      setError(err.message || "Failed to load plants");
       setPlants([]);
     } finally {
       setLoading(false);
     }
   }, []);
 
-  
   useEffect(() => {
     fetchUserPlants();
   }, [fetchUserPlants]);
 
- 
   const handleEditPlant = (id, updates) => {
     setPlants((prev) =>
       prev.map((p) => (p.id === id ? { ...p, ...updates } : p))
     );
+    fetch(`http://localhost:5000/api/user/plants/${id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+      body: JSON.stringify(updates),
+    }).catch((err) => console.error(err));
   };
 
-  
   const handleDeletePlant = (id) => {
     setPlants((prev) => prev.filter((p) => p.id !== id));
     fetch(`http://localhost:5000/api/user/plants/${id}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-    }).catch((err) => console.error("Error deleting plant:", err));
+    }).catch((err) => console.error(err));
   };
 
- 
-  const filteredPlants = plants.filter((p) =>
-    p.plant_name.toLowerCase().includes(searchQuery.toLowerCase())
+  
+  const handleAddPlant = () => {
+    fetchUserPlants();
+    setMessage({ type: "success", text: "Plant added successfully!" });
+    setTimeout(() => setMessage(null), 3000);
+  };
+
+  const filteredPlants = plants.filter(
+    (p) =>
+      p &&
+      p.plant_name &&
+      p.plant_name.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
   const sortedPlants = [...filteredPlants].sort((a, b) =>
     sortOption === "name"
       ? a.plant_name.localeCompare(b.plant_name)
@@ -62,7 +83,16 @@ const Garden = () => {
         🌱 My Garden
       </h1>
 
-      
+      {message && (
+        <div
+          className={`p-2 mb-4 rounded ${
+            message.type === "success" ? "bg-green-200" : "bg-red-200"
+          }`}
+        >
+          {message.text}
+        </div>
+      )}
+
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <input
           type="text"
@@ -81,21 +111,16 @@ const Garden = () => {
         </select>
       </div>
 
-     
-      <AddPlantForm
-        onPlantAdded={(newPlant) => setPlants((prev) => [newPlant, ...prev])}
-      />
+      <AddPlantForm onPlantAdded={handleAddPlant} />
 
-      
+      {error && <p className="text-red-500 mt-4">{error}</p>}
+
       {loading ? (
         <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 animate-pulse">
           {Array(4)
             .fill(0)
             .map((_, i) => (
-              <div
-                key={i}
-                className="h-48 bg-gray-200 rounded-lg shadow"
-              ></div>
+              <div key={i} className="h-48 bg-gray-200 rounded-lg shadow"></div>
             ))}
         </div>
       ) : sortedPlants.length === 0 ? (
