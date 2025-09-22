@@ -34,48 +34,80 @@ function WeatherWidget() {
     return "#576574";
   };
 
+  // ✅ Updated: calculate highs/lows AND pick most frequent weather condition
   const processForecastData = (list) => {
     const grouped = {};
 
     list.forEach((entry) => {
       const dateKey = dayjs(entry.dt_txt).format("YYYY-MM-DD");
+
       if (!grouped[dateKey]) {
-        grouped[dateKey] = entry;
-      } else {
-        const currentHour = parseInt(dayjs(grouped[dateKey].dt_txt).format("H"));
-        const newHour = parseInt(dayjs(entry.dt_txt).format("H"));
-        if (Math.abs(newHour - 12) < Math.abs(currentHour - 12)) {
-          grouped[dateKey] = entry;
-        }
+        grouped[dateKey] = {
+          temps: [],
+          min: entry.main.temp_min,
+          max: entry.main.temp_max,
+          weatherCounts: {}, // track frequency of each condition
+        };
       }
+
+      // Collect temps
+      grouped[dateKey].temps.push(entry.main.temp);
+      grouped[dateKey].min = Math.min(grouped[dateKey].min, entry.main.temp_min);
+      grouped[dateKey].max = Math.max(grouped[dateKey].max, entry.main.temp_max);
+
+      // Count weather occurrences
+      const weatherDesc = entry.weather[0].description;
+      if (!grouped[dateKey].weatherCounts[weatherDesc]) {
+        grouped[dateKey].weatherCounts[weatherDesc] = 0;
+      }
+      grouped[dateKey].weatherCounts[weatherDesc] += 1;
     });
 
     const sortedDates = Object.keys(grouped).sort();
-    return sortedDates.slice(0, 5).map((date) => grouped[date]);
+
+    return sortedDates.slice(0, 5).map((date) => {
+      const temps = grouped[date].temps;
+
+      // Pick the most common weather description
+      const weatherDesc = Object.entries(grouped[date].weatherCounts).sort(
+        (a, b) => b[1] - a[1]
+      )[0][0];
+
+      return {
+        date,
+        weather: { description: weatherDesc },
+        temp: Math.round(temps.reduce((a, b) => a + b, 0) / temps.length),
+        temp_min: Math.round(grouped[date].min),
+        temp_max: Math.round(grouped[date].max),
+      };
+    });
   };
 
-  const fetchForecast = useCallback(async (location) => {
-    if (!location) return;
-    setLoading(true);
-    setError("");
-    setForecast([]);
-    setLocationName("");
+  const fetchForecast = useCallback(
+    async (location) => {
+      if (!location) return;
+      setLoading(true);
+      setError("");
+      setForecast([]);
+      setLocationName("");
 
-    try {
-      const response = await axios.get(
-        `https://api.openweathermap.org/data/2.5/forecast?q=${location}&units=imperial&appid=${API_KEY}`
-      );
-      setLocationName(response.data.city.name);
-      const filtered = processForecastData(response.data.list);
-      setForecast(filtered);
-      localStorage.setItem("weatherLocation", location);
-    } catch (err) {
-      console.error("Error fetching forecast:", err);
-      setError("Unable to fetch forecast. Try another location.");
-    } finally {
-      setLoading(false);
-    }
-  }, [API_KEY]);
+      try {
+        const response = await axios.get(
+          `https://api.openweathermap.org/data/2.5/forecast?q=${location}&units=imperial&appid=${API_KEY}`
+        );
+        setLocationName(response.data.city.name);
+        const filtered = processForecastData(response.data.list);
+        setForecast(filtered);
+        localStorage.setItem("weatherLocation", location);
+      } catch (err) {
+        console.error("Error fetching forecast:", err);
+        setError("Unable to fetch forecast. Try another location.");
+      } finally {
+        setLoading(false);
+      }
+    },
+    [API_KEY]
+  );
 
   useEffect(() => {
     const savedLocation = localStorage.getItem("weatherLocation");
@@ -84,15 +116,6 @@ function WeatherWidget() {
       fetchForecast(savedLocation);
     }
   }, [fetchForecast]);
-
-  const formatDate = (dt_txt) => {
-    const date = new Date(dt_txt);
-    return date.toLocaleDateString(undefined, {
-      weekday: "short",
-      month: "short",
-      day: "numeric",
-    });
-  };
 
   return (
     <div className="bg-blue-100 rounded-xl shadow-md p-4 mt-6 w-full max-w-5xl mx-auto">
@@ -125,25 +148,27 @@ function WeatherWidget() {
 
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 justify-center px-2">
             {forecast.map((day, index) => {
-              const iconColor = getIconColor(day.weather[0].description);
+              const iconColor = getIconColor(day.weather.description);
               return (
                 <div
                   key={index}
                   className="bg-white rounded-xl shadow p-4 flex flex-col items-center text-center h-56"
                 >
-                  <p className="font-medium">{formatDate(day.dt_txt)}</p>
+                  <p className="font-medium">
+                    {dayjs(day.date).format("ddd, MMM D")}
+                  </p>
                   <ReactAnimatedWeather
-                    icon={getAnimatedIcon(day.weather[0].description)}
+                    icon={getAnimatedIcon(day.weather.description)}
                     color={iconColor}
                     size={48}
                     animate={true}
                   />
                   <p className="capitalize text-gray-600 text-sm px-1 truncate w-full">
-                    {day.weather[0].description}
+                    {day.weather.description}
                   </p>
-                  <p className="font-semibold text-lg">{Math.round(day.main.temp)}°F</p>
+                  <p className="font-semibold text-lg">{day.temp}°F</p>
                   <p className="text-xs text-gray-500">
-                    L: {Math.round(day.main.temp_min)}° | H: {Math.round(day.main.temp_max)}°
+                    L: {day.temp_min}° | H: {day.temp_max}°
                   </p>
                 </div>
               );
