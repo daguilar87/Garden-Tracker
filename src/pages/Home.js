@@ -28,7 +28,7 @@ export default function Home() {
       }}
     >
       <Helmet>
-        <title>Home | Garden Tracker</title>
+        <title>Garden Tracker</title>
       </Helmet>
 
       <motion.div

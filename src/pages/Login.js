@@ -18,7 +18,7 @@ function Login() {
     e.preventDefault();
 
     try {
-      const res = await fetch("http://localhost:5000/api/login", {
+      const res = await fetch("https://gardenflask.fly.dev/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
@@ -35,7 +35,7 @@ function Login() {
       localStorage.setItem("refreshToken", data.refresh_token);
       localStorage.setItem("username", data.username);
 
-      const userRes = await fetch("http://localhost:5000/api/me", {
+      const userRes = await fetch("https://gardenflask.fly.dev/api/me", {
         headers: {
           Authorization: `Bearer ${data.token}`,
         },

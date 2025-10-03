@@ -3,7 +3,7 @@ export const refreshAccessToken = async () => {
   if (!refreshToken) return null;
 
   try {
-    const res = await fetch("http://localhost:5000/api/refresh", {
+    const res = await fetch("https://gardenflask.fly.dev/api/refresh", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

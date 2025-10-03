@@ -34,7 +34,6 @@ function WeatherWidget() {
     return "#576574";
   };
 
-  // ✅ Updated: calculate highs/lows AND pick most frequent weather condition
   const processForecastData = (list) => {
     const grouped = {};
 
@@ -46,16 +45,14 @@ function WeatherWidget() {
           temps: [],
           min: entry.main.temp_min,
           max: entry.main.temp_max,
-          weatherCounts: {}, // track frequency of each condition
+          weatherCounts: {},
         };
       }
 
-      // Collect temps
       grouped[dateKey].temps.push(entry.main.temp);
       grouped[dateKey].min = Math.min(grouped[dateKey].min, entry.main.temp_min);
       grouped[dateKey].max = Math.max(grouped[dateKey].max, entry.main.temp_max);
 
-      // Count weather occurrences
       const weatherDesc = entry.weather[0].description;
       if (!grouped[dateKey].weatherCounts[weatherDesc]) {
         grouped[dateKey].weatherCounts[weatherDesc] = 0;
@@ -68,10 +65,8 @@ function WeatherWidget() {
     return sortedDates.slice(0, 5).map((date) => {
       const temps = grouped[date].temps;
 
-      // Pick the most common weather description
-      const weatherDesc = Object.entries(grouped[date].weatherCounts).sort(
-        (a, b) => b[1] - a[1]
-      )[0][0];
+      const weatherDesc = Object.entries(grouped[date].weatherCounts)
+        .sort((a, b) => b[1] - a[1])[0][0];
 
       return {
         date,
@@ -84,8 +79,30 @@ function WeatherWidget() {
   };
 
   const fetchForecast = useCallback(
-    async (location) => {
-      if (!location) return;
+    async (input) => {
+      if (!input) return;
+
+      
+      const normalizeLocationInput = (input) => {
+        input = input.trim();
+        if (/^\d{5}$/.test(input)) return input;
+        const match = input.match(/(.+?)(?:,?\s*)([A-Za-z]{2})$/);
+        if (match) {
+          const city = match[1]
+            .split(" ")
+            .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+            .join(" ");
+          const state = match[2].toUpperCase();
+          return `${city}, ${state}`;
+        }
+        return input
+          .split(" ")
+          .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+          .join(" ");
+      };
+
+      const normalized = normalizeLocationInput(input);
+
       setLoading(true);
       setError("");
       setForecast([]);
@@ -93,12 +110,23 @@ function WeatherWidget() {
 
       try {
         const response = await axios.get(
-          `https://api.openweathermap.org/data/2.5/forecast?q=${location}&units=imperial&appid=${API_KEY}`
+          `https://api.openweathermap.org/data/2.5/forecast?q=${encodeURIComponent(
+            normalized
+          )},US&units=imperial&appid=${API_KEY}`
         );
-        setLocationName(response.data.city.name);
+
+        const city = response.data.city.name;
+
+        let displayLocation = city;
+        const parts = normalized.split(",");
+        if (parts.length === 2) {
+          displayLocation = `${city}, ${parts[1].trim().toUpperCase()}`;
+        }
+
+        setLocationName(displayLocation);
         const filtered = processForecastData(response.data.list);
         setForecast(filtered);
-        localStorage.setItem("weatherLocation", location);
+        localStorage.setItem("weatherLocation", input);
       } catch (err) {
         console.error("Error fetching forecast:", err);
         setError("Unable to fetch forecast. Try another location.");
@@ -124,7 +152,7 @@ function WeatherWidget() {
       <div className="flex flex-col sm:flex-row items-center justify-between gap-2 mb-4 px-2">
         <input
           type="text"
-          placeholder="Enter city or ZIP"
+          placeholder="Enter city and state (e.g., Bellingham, WA) or ZIP"
           value={locationInput}
           onChange={(e) => setLocationInput(e.target.value)}
           className="w-full sm:flex-1 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring focus:ring-blue-200"

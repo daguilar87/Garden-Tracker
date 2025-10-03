@@ -14,7 +14,7 @@ const Garden = () => {
     try {
       setLoading(true);
       setError(null);
-      const res = await fetch("http://localhost:5000/api/user/plants", {
+      const res = await fetch("https://gardenflask.fly.dev/api/user/plants", {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
 
@@ -39,7 +39,7 @@ const Garden = () => {
     setPlants((prev) =>
       prev.map((p) => (p.id === id ? { ...p, ...updates } : p))
     );
-    fetch(`http://localhost:5000/api/user/plants/${id}`, {
+    fetch(`https://gardenflask.fly.dev/api/user/plants/${id}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -51,7 +51,7 @@ const Garden = () => {
 
   const handleDeletePlant = (id) => {
     setPlants((prev) => prev.filter((p) => p.id !== id));
-    fetch(`http://localhost:5000/api/user/plants/${id}`, {
+    fetch(`https://gardenflask.fly.dev/api/user/plants/${id}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
     }).catch((err) => console.error(err));

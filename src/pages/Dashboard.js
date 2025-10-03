@@ -22,7 +22,7 @@ export default function Dashboard() {
   }, []);
 
   useEffect(() => {
-    fetch("http://127.0.0.1:5000/api/plants")
+    fetch("https://gardenflask.fly.dev/api/plants")
       .then((res) => res.json())
       .then((data) => setPlantOptions(data))
       .catch((err) => console.error("Failed to load plant options:", err));
@@ -32,7 +32,7 @@ export default function Dashboard() {
     const selectedPlant = manualEntry ? customPlant : plant;
     if (zone && selectedPlant) {
       fetch(
-        `http://127.0.0.1:5000/api/planting-info/${selectedPlant}?zone=${zone}`,
+        `https://gardenflask.fly.dev/api/planting-info/${selectedPlant}?zone=${zone}`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
