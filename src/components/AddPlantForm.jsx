@@ -15,7 +15,7 @@ const AddPlantForm = ({ onPlantAdded }) => {
 
   useEffect(() => {
     if (open && !loadedPlants) {
-      fetch("https://gardenflask.fly.dev/api/plants")
+      fetch(`${process.env.REACT_APP_API_URL}plants`)
         .then((res) => res.json())
         .then((data) => {
           setPlantOptions(data);
@@ -43,7 +43,7 @@ const AddPlantForm = ({ onPlantAdded }) => {
     };
 
     try {
-      const res = await fetch("https://gardenflask.fly.dev/api/user/plants", {
+      const res = await fetch(`${process.env.REACT_APP_API_URL}user/plants`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

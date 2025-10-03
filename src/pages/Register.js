@@ -19,7 +19,7 @@ function Register() {
     e.preventDefault();
 
     try {
-      const res = await fetch("https://gardenflask.fly.dev/api/register", {
+      const res = await fetch(`${process.env.REACT_APP_API_URL}register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),

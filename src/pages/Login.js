@@ -17,12 +17,12 @@ function Login() {
   const handleLogin = async (e) => {
     e.preventDefault();
 
-    try {
-      const res = await fetch("https://gardenflask.fly.dev/api/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
-      });
+   try {
+  const res = await fetch(`${process.env.REACT_APP_API_URL}login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, password }),
+  });
 
       const data = await res.json();
 
@@ -35,7 +35,7 @@ function Login() {
       localStorage.setItem("refreshToken", data.refresh_token);
       localStorage.setItem("username", data.username);
 
-      const userRes = await fetch("https://gardenflask.fly.dev/api/me", {
+       const userRes = await fetch(`${process.env.REACT_APP_API_URL}me`, {
         headers: {
           Authorization: `Bearer ${data.token}`,
         },

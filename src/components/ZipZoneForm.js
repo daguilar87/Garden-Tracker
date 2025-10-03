@@ -17,7 +17,7 @@ export default function ZipZoneForm({ onZoneUpdated }) {
     }
 
     try {
-      const res = await fetch("https://gardenflask.fly.dev/api/update-zip", {
+      const res = await fetch(`${process.env.REACT_APP_API_URL}update-zip`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

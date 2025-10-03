@@ -22,7 +22,7 @@ export default function Dashboard() {
   }, []);
 
   useEffect(() => {
-    fetch("https://gardenflask.fly.dev/api/plants")
+    fetch(`${process.env.REACT_APP_API_URL}plants`)
       .then((res) => res.json())
       .then((data) => setPlantOptions(data))
       .catch((err) => console.error("Failed to load plant options:", err));
@@ -32,7 +32,7 @@ export default function Dashboard() {
     const selectedPlant = manualEntry ? customPlant : plant;
     if (zone && selectedPlant) {
       fetch(
-        `https://gardenflask.fly.dev/api/planting-info/${selectedPlant}?zone=${zone}`,
+        `${process.env.REACT_APP_API_URL}planting-info/${selectedPlant}?zone=${zone}`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
