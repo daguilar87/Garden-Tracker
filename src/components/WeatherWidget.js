@@ -82,7 +82,6 @@ function WeatherWidget() {
     async (input) => {
       if (!input) return;
 
-      
       const normalizeLocationInput = (input) => {
         input = input.trim();
         if (/^\d{5}$/.test(input)) return input;
@@ -174,7 +173,7 @@ function WeatherWidget() {
             {locationName} - 5 Day Forecast
           </h4>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 justify-center px-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4 justify-center px-2">
             {forecast.map((day, index) => {
               const iconColor = getIconColor(day.weather.description);
               return (

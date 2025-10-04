@@ -6,11 +6,14 @@ const months = [
 ];
 
 export default function PlantTimeline({ info, zone }) {
-  if (!info || !info.zones) return <p className="text-gray-500">No timeline data available.</p>;
+  if (!info || !info.zones) 
+    return <p className="text-gray-500">No timeline data available.</p>;
 
-  
-  const zoneKey = Object.keys(info.zones).find(z => z.toLowerCase() === zone.toLowerCase());
-  if (!zoneKey) return <p className="text-gray-500">No timeline data available.</p>;
+  const zoneKey = Object.keys(info.zones).find(
+    z => z.toLowerCase() === zone.toLowerCase()
+  );
+  if (!zoneKey) 
+    return <p className="text-gray-500">No timeline data available.</p>;
 
   const zoneInfo = info.zones[zoneKey];
 
@@ -31,7 +34,8 @@ export default function PlantTimeline({ info, zone }) {
         Best planting: <strong>{zoneInfo.start_month}</strong> to <strong>{zoneInfo.end_month}</strong>
       </div>
 
-      <div className="grid grid-cols-12 gap-1 text-xs mb-4">
+      
+      <div className="grid grid-cols-3 sm:grid-cols-6 md:grid-cols-12 gap-1 text-xs mb-4">
         {months.map((month, index) => {
           const isActive =
             startIndex !== -1 &&
@@ -42,8 +46,10 @@ export default function PlantTimeline({ info, zone }) {
           return (
             <div
               key={month}
-              className={`p-2 rounded text-center border ${
-                isActive ? "bg-green-400 text-white font-semibold" : "bg-gray-100 text-gray-700"
+              className={`p-2 rounded text-center border text-xs sm:text-sm ${
+                isActive 
+                  ? "bg-green-400 text-white font-semibold" 
+                  : "bg-gray-100 text-gray-700"
               }`}
             >
               {month.slice(0, 3)}
